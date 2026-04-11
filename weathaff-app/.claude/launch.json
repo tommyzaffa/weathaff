@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "WeathAff Web Preview",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "www", "--listen", "8080"],
+      "port": 8080
+    }
+  ]
+}

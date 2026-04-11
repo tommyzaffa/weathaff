@@ -1,0 +1,1843 @@
+<!DOCTYPE html>
+<html lang="en" style="background:#0b1430">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>WeathAff — Globe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://d3js.org/topojson.v3.min.js"></script>
+<style>
+    :root {
+    --bg: #0b1430;
+    --panel: rgba(34, 58, 112, 0.78);
+    --border: #5977bd;
+    --text: #f3f6ff;
+    --muted: #a8b8e6;
+    --hi: #8eb7ff;
+    --gold: #f4d27a;
+    --red: #ff8f9f;
+    --green: #8fd7c4;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+  height: 100%;
+  min-height: 100%;
+  width: 100%;
+  background: #0b1430;
+  overflow-x: hidden;
+}
+
+body {
+  background:
+    radial-gradient(circle at 50% 34%, rgba(142,183,255,0.18) 0, rgba(142,183,255,0.08) 12%, rgba(11,20,48,0) 34%),
+    linear-gradient(180deg, #2f4f98 0%, #233c7b 22%, #172a5a 48%, #0f1c43 72%, #0b1430 100%);
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+  color: var(--text);
+  margin: 0;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow-x: hidden;
+
+  min-height: 100dvh;
+
+  padding:
+    calc(40px + env(safe-area-inset-top))
+    12px
+    calc(6px + env(safe-area-inset-bottom));
+
+  position: relative;
+}
+body {
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+}
+body::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle, rgba(255,255,255,0.55) 0 1px, transparent 1.5px) 0 0/120px 120px,
+    radial-gradient(circle, rgba(255,255,255,0.28) 0 1px, transparent 1.5px) 40px 65px/170px 170px,
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: 120px 120px, 170px 170px, 24px 24px, 24px 24px;
+  opacity: 0.26;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app {
+  width: min(400px, calc(100vw - 24px));
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+
+  padding-top: 20px;
+  padding-bottom: 16px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  position: relative;
+  left: 0;
+  right: 0;
+}
+
+  /* ── HEADER ── */
+  .header {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 6px 0 18px;
+  margin-bottom: 4px;
+}
+.brand-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.brand-panel {
+  min-width: 240px;
+  max-width: 100%;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(57,87,155,0.88) 0%, rgba(29,50,101,0.92) 62%, rgba(18,31,71,0.95) 100%);
+  border: 3px solid var(--border);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 4px 4px 0 rgba(0,0,0,0.7), 0 0 26px rgba(142,183,255,0.12);
+  padding: 12px 18px 10px;
+  position: relative;
+  overflow: hidden;
+}
+.brand-panel::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 2px solid rgba(168,184,230,0.20);
+  pointer-events: none;
+}
+.brand-panel::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 4px;
+  background: linear-gradient(90deg, rgba(244,210,122,0.95) 0%, rgba(142,183,255,0.95) 50%, rgba(244,210,122,0.95) 100%);
+  opacity: 0.95;
+}
+.header-title {
+  font-size: 13px;
+  color: var(--gold);
+  text-shadow: 2px 2px 0 #000;
+  letter-spacing: 1px;
+  position: relative;
+  z-index: 1;
+}
+.header-sub {
+  font-size: 5px;
+  color: var(--muted);
+  margin-top: 7px;
+  letter-spacing: 1.6px;
+  position: relative;
+  z-index: 1;
+}
+
+  /* ── BUG BUTTON ── */
+  .bug-btn {
+  background: linear-gradient(180deg, rgba(56,86,150,0.78) 0%, rgba(24,41,83,0.92) 100%);
+  border: 2px solid var(--border);
+  color: var(--red);
+  font-family: inherit;
+  font-size: 6px;
+  padding: 8px 14px;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.72);
+  white-space: nowrap;
+}
+  .bug-btn:hover  { border-color: var(--red); }
+  .bug-btn:active { box-shadow: none; transform: translate(2px,2px); }
+
+  .toast {
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--panel); border: 2px solid var(--red);
+    color: var(--red); font-family: inherit; font-size: 6px;
+    padding: 10px 16px; box-shadow: 3px 3px 0 #000;
+    z-index: 999; white-space: nowrap;
+    animation: toast-anim 2.5s forwards;
+  }
+  @keyframes toast-anim {
+    0%   { opacity:0; transform:translateX(-50%) translateY(8px); }
+    12%  { opacity:1; transform:translateX(-50%) translateY(0); }
+    75%  { opacity:1; }
+    100% { opacity:0; transform:translateX(-50%) translateY(8px); }
+  }
+
+  .footer-bug {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+  padding-bottom: 0;
+}
+
+/* ── STATUS LIGHTS ── */
+.status-bar {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 10px;
+}
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 5px;
+  color: var(--muted);
+}
+.status-dot {
+  width: 6px;
+  height: 6px;
+  background: #69f0ae;
+  box-shadow: 0 0 4px rgba(105,240,174,0.7);
+}
+.status-dot.warn {
+  background: var(--gold);
+  box-shadow: 0 0 6px rgba(244,210,122,0.78);
+}
+.status-dot.off {
+  background: #2a4a6a;
+  box-shadow: none;
+}
+
+  /* ── SEARCH ── */
+  .search-row {
+  display: flex;
+  width: 100%;
+  margin-top: 0;
+}
+.city-input {
+    flex: 1;
+    min-width: 0;
+    background: linear-gradient(180deg, rgba(33,56,108,0.90) 0%, rgba(18,30,68,0.96) 100%);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 8px;
+    padding: 12px 10px;
+    border: 3px solid var(--border);
+    border-right: none;
+    outline: none;
+    box-shadow: inset 2px 2px 0 rgba(255,255,255,0.03), inset -2px -2px 0 rgba(0,0,0,0.24);
+  }
+  .city-input::placeholder { color: var(--muted); }
+  .search-row.focused .city-input { border-color: var(--hi); }
+  .search-row.focused .go-btn     { border-color: var(--hi); }
+  .go-btn {
+    background: linear-gradient(180deg, #acc6ff 0%, #7ea6f6 100%);
+    color: #122149;
+    font-family: inherit;
+    font-size: 8px;
+    padding: 12px 14px;
+    border: 3px solid var(--border);
+    border-left: none;
+    cursor: pointer;
+    transition: background .1s, border-color .1s, transform .1s;
+  }
+  .go-btn:hover  { background: #81d4fa; }
+  .go-btn:active { background: #4ab0d9; }
+
+  /* ── BACK BUTTON (cloud+sun icon) ── */
+  .back-btn {
+    background: linear-gradient(180deg, rgba(56,86,150,0.86) 0%, rgba(24,41,83,0.94) 100%);
+    border: 3px solid var(--border);
+    padding: 0 12px;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.72);
+    margin-left: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color .1s, transform .1s;
+  }
+  .back-btn:hover  { border-color: var(--hi); }
+  .back-btn:active { box-shadow: none; transform: translate(2px,2px); }
+
+  .gps-btn {
+    background: linear-gradient(180deg, rgba(56,86,150,0.86) 0%, rgba(24,41,83,0.94) 100%);
+    border: 3px solid var(--border);
+    padding: 0 12px;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.72);
+    margin-left: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color .1s, transform .1s;
+  }
+  .gps-btn:hover  { border-color: var(--hi); }
+  .gps-btn:active { box-shadow: none; transform: translate(2px,2px); }
+  .gps-btn.gps-active svg rect { fill: var(--red); }
+
+  /* iOS/Android: niente hover stuck e niente focus ring al tocco */
+  @media (hover: none) {
+    .back-btn:hover { border-color: var(--border); }
+    .gps-btn:hover  { border-color: var(--border); }
+    .fav-btn:hover  { border-color: var(--border); color: var(--muted); }
+  }
+  .back-btn:focus:not(:focus-visible),
+  .gps-btn:focus:not(:focus-visible),
+  .fav-btn:focus:not(:focus-visible) { outline: none; border-color: var(--border); }
+
+  /* ── FAV TOGGLE BUTTON ── */
+  .fav-btn {
+    background: linear-gradient(180deg, rgba(56,86,150,0.86) 0%, rgba(24,41,83,0.94) 100%);
+    border: 3px solid var(--border);
+    color: var(--muted);
+    font-size: 14px;
+    padding: 0 14px;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.72);
+    margin-left: 8px;
+    transition: color .1s, border-color .1s, transform .1s;
+    line-height: 1;
+  }
+  .fav-btn:hover    { color: var(--text); border-color: var(--hi); }
+  .fav-btn:active   { box-shadow: none; transform: translate(2px,2px); }
+  .fav-btn.has-favs { color: var(--gold); }
+
+  /* ── CITY BAR ── */
+  .city-bar {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    font-size: 8px; color: var(--text);
+    min-height: 20px; letter-spacing: 1px;
+  }
+
+  /* ── STAR BUTTON (in city bar) ── */
+  .star-btn {
+    background: none; border: none; font-size: 16px;
+    color: var(--muted); cursor: pointer; padding: 0;
+    line-height: 1; transition: color .1s, transform .15s;
+  }
+  .star-btn.active { color: var(--gold); }
+  .star-btn:hover  { transform: scale(1.25); }
+
+  /* ── GLOBE WRAP ── */
+  .globe-wrap {
+    position: relative;
+    background: linear-gradient(180deg, rgba(55,85,148,0.78) 0%, rgba(31,53,104,0.84) 58%, rgba(19,32,70,0.90) 100%);
+    border: 3px solid var(--border);
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 4px 4px 0 rgba(0,0,0,0.72), inset 1px 1px 0 rgba(255,255,255,0.05), 0 0 22px rgba(142,183,255,0.10);
+  }
+  #globe {
+    display: block; cursor: grab; image-rendering: pixelated;
+    touch-action: none;
+  }
+  #globe:active { cursor: grabbing; }
+  .drag-hint {
+    position: absolute; bottom: 6px; right: 8px;
+    font-size: 5px; color: var(--muted); pointer-events: none;
+  }
+
+  /* ── HOURLY ── */
+  .sec-hdr {
+    display: flex; align-items: center; gap: 8px;
+    margin-top: 2px;
+  }
+  .sec-lbl { font-size: 6px; color: var(--muted); white-space: nowrap; }
+  .sec-line { flex: 1; height: 1px; background: var(--border); }
+
+  .hourly-strip {
+    display: flex;
+    gap: 5px;
+    overflow-x: auto;
+    padding-bottom: 12px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .hourly-strip::-webkit-scrollbar { height: 3px; }
+  .hourly-strip::-webkit-scrollbar-thumb { background: var(--border); }
+
+  .hour-slot {
+    flex: 0 0 auto;
+    min-width: 54px;
+    background: linear-gradient(180deg, rgba(64,96,164,0.72) 0%, rgba(27,47,96,0.84) 100%);
+    border: 2px solid var(--border);
+    padding: 8px 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    transition: border-color .1s;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.7), inset 1px 1px 0 rgba(255,255,255,0.05);
+  }
+  .hour-slot.current { border-color: var(--hi); }
+  .h-time { font-size: 5px; color: var(--muted); }
+  .h-icon { line-height: 0; }
+  .h-temp { font-size: 8px; }
+
+  .no-data {
+    font-size: 6px; color: var(--muted); text-align: center;
+    padding: 16px 0; line-height: 2.5; width: 100%;
+    white-space: pre-line;
+  }
+
+  /* ── GLOBE INFO PANEL ── */
+  .globe-info-card {
+    background: linear-gradient(180deg, rgba(55,85,148,0.78) 0%, rgba(31,53,104,0.84) 58%, rgba(19,32,70,0.90) 100%);
+    border: 3px solid var(--border);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 4px 4px 0 rgba(0,0,0,0.72), inset 1px 1px 0 rgba(255,255,255,0.05), 0 0 18px rgba(142,183,255,0.10);
+    padding: 12px 10px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 2px;
+  }
+  .info-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 1px;
+  }
+  .info-label {
+    font-size: 6px;
+    color: var(--gold);
+    white-space: nowrap;
+  }
+  .info-line {
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+  }
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .info-cell {
+    background: linear-gradient(180deg, rgba(64,96,164,0.72) 0%, rgba(27,47,96,0.84) 100%);
+    border: 2px solid var(--border);
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.68), inset 1px 1px 0 rgba(255,255,255,0.05);
+    padding: 8px 7px 7px;
+    min-height: 44px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+  }
+  .info-k {
+    font-size: 5px;
+    color: var(--muted);
+  }
+  .info-v {
+    font-size: 6px;
+    color: var(--text);
+    line-height: 1.7;
+  }
+
+  /* ── FAVORITES OVERLAY ── */
+  .fav-overlay {
+    display: none; position: fixed; inset: 0; z-index: 500;
+    flex-direction: column; align-items: center;
+    padding-top: 70px;
+  }
+  .fav-overlay.open {
+    display: flex;
+  }
+  .fav-backdrop {
+    position: absolute; inset: 0; background: rgba(0,0,0,.65);
+  }
+  .fav-panel {
+    position: relative;
+    z-index: 1;
+    margin-top: 160px;
+    width: calc(100% - 24px);
+    max-width: 400px;
+    background: linear-gradient(180deg, rgba(57,87,155,0.92) 0%, rgba(27,47,96,0.95) 100%);
+    border: 3px solid var(--border);
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.72), 0 0 24px rgba(142,183,255,0.10);
+  }
+  .fav-panel::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold) 0%, var(--hi) 50%, var(--gold) 100%);
+    opacity: 0.9;
+  }
+  .fav-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 12px 8px;
+    border-bottom: 2px solid var(--border);
+  }
+  .fav-title { font-size: 7px; color: var(--gold); }
+  .fav-close {
+    background: none; border: none; font-family: inherit;
+    font-size: 12px; color: var(--muted); cursor: pointer; padding: 0;
+  }
+  .fav-close:hover { color: var(--red); }
+  .fav-list { padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .fav-item {
+    display: flex;
+    align-items: center;
+    background: rgba(14,24,58,0.92);
+    border: 2px solid var(--border);
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.72);
+    transition: border-color .1s, transform .1s;
+  }
+  .fav-item:hover { border-color: var(--gold); }
+  .fav-load {
+    flex: 1; font-family: inherit; font-size: 6px; color: var(--text);
+    background: none; border: none; cursor: pointer;
+    padding: 11px 12px; text-align: left; letter-spacing: .5px;
+  }
+  .fav-load:hover { color: var(--gold); }
+  .fav-del {
+    font-family: inherit; font-size: 10px; color: var(--muted);
+    background: none; border: none; cursor: pointer; padding: 8px 12px;
+  }
+  .fav-del:hover { color: var(--red); }
+  .fav-empty {
+    font-size: 6px; color: var(--muted); text-align: center;
+    padding: 20px 16px; line-height: 2.5; white-space: pre-line;
+  }
+  .star {
+    font-size: 12px;
+  }
+
+  body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: #0b1430;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease-in-out;
+  z-index: 9999;
+}
+
+body.is-entering::after,
+body.is-leaving::after {
+  opacity: 1;
+}
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--panel); border: 2px solid var(--red);
+    color: var(--red); font-family: inherit; font-size: 6px;
+    padding: 10px 16px; box-shadow: 3px 3px 0 #000;
+    z-index: 999; white-space: nowrap;
+    animation: toast-anim 2.5s forwards;
+  }
+  @keyframes toast-anim {
+    0%   { opacity:0; transform:translateX(-50%) translateY(8px); }
+    12%  { opacity:1; transform:translateX(-50%) translateY(0); }
+    75%  { opacity:1; }
+    100% { opacity:0; transform:translateX(-50%) translateY(8px); }
+  }
+</style>
+</head>
+<body class="is-entering">
+<div class="app">
+
+  <div class="header">
+    <div class="brand-wrap">
+      <div class="brand-panel">
+        <div class="header-title">&#9729; WEATHAFF</div>
+        <div class="header-sub">v1.0 — 16-BIT EDITION</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="search-row" id="searchRow">
+    <input class="city-input" id="cityInput" type="text" autocomplete="off" spellcheck="false">
+    <button class="go-btn" id="searchBtn">GO</button>
+    <button class="back-btn" id="backBtn" title="Weather"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="2" y="0" width="2" height="2" fill="#FFD700"/><rect x="6" y="0" width="2" height="2" fill="#FFD700"/><rect x="4" y="2" width="2" height="2" fill="#FFD700"/><rect x="0" y="4" width="10" height="2" fill="#FFD700"/><rect x="4" y="6" width="2" height="2" fill="#FFD700"/><rect x="10" y="6" width="4" height="2" fill="#ECEFF1"/><rect x="2" y="8" width="2" height="2" fill="#FFD700"/><rect x="6" y="8" width="2" height="2" fill="#FFD700"/><rect x="8" y="8" width="8" height="2" fill="#ECEFF1"/><rect x="6" y="10" width="10" height="2" fill="#ECEFF1"/><rect x="6" y="12" width="8" height="2" fill="#ECEFF1"/></svg></button>
+    <button class="gps-btn" id="gpsBtn" title="GPS"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="7" y="1" width="2" height="4" fill="#8eb7ff"/><rect x="7" y="11" width="2" height="4" fill="#8eb7ff"/><rect x="1" y="7" width="4" height="2" fill="#8eb7ff"/><rect x="11" y="7" width="4" height="2" fill="#8eb7ff"/><rect x="5" y="5" width="6" height="1" fill="#8eb7ff"/><rect x="5" y="10" width="6" height="1" fill="#8eb7ff"/><rect x="5" y="5" width="1" height="6" fill="#8eb7ff"/><rect x="10" y="5" width="1" height="6" fill="#8eb7ff"/><rect x="7" y="7" width="2" height="2" fill="#8eb7ff"/></svg></button>
+    <button class="fav-btn" id="favToggle" title="Favorites">&#9733;</button>
+  </div>
+
+  <div class="fav-overlay" id="favOverlay">
+    <div class="fav-backdrop" id="favBackdrop"></div>
+    <div class="fav-panel">
+      <div class="fav-header">
+        <span class="fav-title" id="favTitleLbl"></span>
+        <button class="fav-close" id="favClose">&#215;</button>
+      </div>
+      <div class="fav-list" id="favList"></div>
+    </div>
+  </div>
+
+  <div class="city-bar" id="cityBar"></div>
+
+  <div class="globe-wrap" id="globeWrap">
+    <canvas id="globe"></canvas>
+    <div class="drag-hint" id="dragHint">DRAG TO ROTATE</div>
+  </div>
+
+  <div class="sec-hdr">
+    <span class="sec-lbl" id="forecastLbl">24H FORECAST</span>
+    <div class="sec-line"></div>
+  </div>
+  <div class="hourly-strip" id="hourlyStrip">
+    <div class="no-data" id="noDataMsg">SEARCH A CITY\nTO SEE FORECAST</div>
+  </div>
+
+  <div class="globe-info-card" id="globeInfoCard">
+    <div class="info-head">
+      <span class="info-label" id="globeDataLbl">GLOBE DATA</span>
+      <div class="info-line"></div>
+    </div>
+    <div class="info-grid">
+      <div class="info-cell">
+        <span class="info-k" id="infoCityLbl">CITY</span>
+        <span class="info-v" id="infoCity">NO TARGET</span>
+      </div>
+      <div class="info-cell">
+        <span class="info-k" id="infoHemisphereLbl">HEMISPHERE</span>
+        <span class="info-v" id="infoHemisphere">--</span>
+      </div>
+      <div class="info-cell">
+        <span class="info-k" id="infoCoordsLbl">LAT / LON</span>
+        <span class="info-v" id="infoCoords">--</span>
+      </div>
+      <div class="info-cell">
+        <span class="info-k" id="infoModeLbl">MODE</span>
+        <span class="info-v" id="infoMode">AUTO ROTATE</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <div class="status-item">
+      <div class="status-dot"></div>
+      <span>NET</span>
+    </div>
+    <div class="status-item">
+      <div class="status-dot"></div>
+      <span>LIVE</span>
+    </div>
+    <div class="status-item">
+      <div class="status-dot warn"></div>
+      <span>GPS</span>
+    </div>
+  </div>
+
+  <div class="footer-bug">
+    <button class="bug-btn" id="bugBtn">! BUG</button>
+  </div>
+
+</div>
+<script>
+// ─────────────────────────────────────────
+//  WORLD DATA  (d3 + TopoJSON)
+// ─────────────────────────────────────────
+let worldLand   = null;
+let smallCanvas = null;
+
+fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/land-110m.json')
+  .then(r => r.json())
+  .then(w => { worldLand = topojson.feature(w, w.objects.land); })
+  .catch(() => {});
+
+// ─── old bounding-box map (kept temporarily, replaced below) ───
+function buildWorldMap_unused() {
+  const W = 180, H = 90;
+  const m = new Uint8Array(W * H);
+
+  // cell centers: lat = 89 - r*2,  lon = -179 + c*2
+  function fill(latMin, latMax, lonMin, lonMax, v) {
+    const rMin = Math.max(0,   Math.floor((90 - latMax) / 2));
+    const rMax = Math.min(H-1, Math.floor((90 - latMin) / 2));
+    const cMin = Math.max(0,   Math.floor((lonMin + 180) / 2));
+    const cMax = Math.min(W-1, Math.floor((lonMax + 180) / 2));
+    for (let r = rMin; r <= rMax; r++)
+      for (let c = cMin; c <= cMax; c++)
+        m[r * W + c] = v;
+  }
+
+  // ── Ice caps ──
+  fill( 72,  90, -180, 180, 2);
+  fill(-90, -62, -180, 180, 2);
+
+  // ── Greenland ──
+  fill( 60,  84,  -57,  -18, 1);
+  fill( 76,  84,  -74,  -57, 1);
+  // Iceland
+  fill( 63,  67,  -25,  -13, 1);
+  // Svalbard
+  fill( 76,  81,   14,   28, 1);
+
+  // ── North America ──
+  // Alaska
+  fill( 54,  72, -168, -141, 1);
+  // Canada west
+  fill( 49,  72, -141,  -95, 1);
+  // Canada east + Labrador
+  fill( 45,  70,  -95,  -53, 1);
+  // Hudson Bay — clear
+  fill( 51,  64,  -95,  -77, 0);
+  // USA main
+  fill( 25,  49, -125,  -67, 1);
+  // Florida peninsula
+  fill( 24,  31,  -82,  -80, 1);
+  // Baja California
+  fill( 22,  32, -118, -109, 1);
+  // Mexico
+  fill( 15,  30, -118,  -86, 1);
+  // Central America
+  fill(  8,  16,  -92,  -77, 1);
+  // Cuba
+  fill( 20,  23,  -85,  -74, 1);
+  // Hispaniola
+  fill( 18,  20,  -74,  -68, 1);
+
+  // ── South America ──
+  fill(  0,  12,  -82,  -60, 1);  // Colombia/Venezuela
+  fill(-12,   0,  -80,  -50, 1);  // Peru/Brazil north
+  fill(-20, -12,  -78,  -38, 1);  // Brazil mid
+  fill(-35, -20,  -73,  -40, 1);  // Brazil/Argentina north
+  fill(-55, -35,  -75,  -52, 1);  // Chile/Argentina south
+  fill(-55, -50,  -68,  -63, 1);  // Tierra del Fuego
+
+  // ── Europe main block ──
+  fill( 36,  48,  -10,   40, 1);
+  fill( 48,  60,  -10,   30, 1);
+  fill( 60,  72,    5,   32, 1);  // Scandinavia
+  fill( 55,  60,   -8,    5, 1);  // Scotland/Ireland
+  // Clear Mediterranean
+  fill( 30,  46,   -6,   37, 0);
+  // Re-add peninsulas & islands
+  fill( 36,  44,   -9,   -1, 1);  // Portugal
+  fill( 36,  44,   -1,    4, 1);  // Spain east
+  fill( 36,  38,    4,    8, 1);  // S.Spain east coast
+  fill( 38,  46,    7,   19, 1);  // Italy
+  fill( 37,  40,   14,   16, 1);  // Italy toe
+  fill( 36,  42,   20,   28, 1);  // Greece
+  fill( 42,  48,   14,   28, 1);  // Balkans (Croatia/Serbia/Bulgaria)
+  fill( 48,  60,   22,   40, 1);  // Ukraine/Poland/Romania
+  fill( 36,  42,   26,   45, 1);  // Turkey
+  fill( 55,  72,    5,   32, 1);  // Scandinavia (restore over clear)
+  fill( 55,  60,   -8,    5, 1);  // British Isles (restore)
+  fill( 51,  59,   -6,    2, 1);  // England/Wales
+  // Corsica & Sardinia
+  fill( 38,  44,    8,   10, 1);
+  // Sicily
+  fill( 37,  38,   12,   16, 1);
+  // Cyprus
+  fill( 34,  36,   32,   34, 1);
+
+  // ── Africa ──
+  fill(-35,  38,  -18,   52, 1);
+  // Red Sea
+  fill( 12,  30,   32,   44, 0);
+  // Gulf of Aden
+  fill(  8,  12,   42,   52, 0);
+  // Re-add Horn of Africa
+  fill(  0,  12,   40,   52, 1);
+  // Madagascar
+  fill(-26, -12,   43,   51, 1);
+  // Canary Islands (approx)
+  fill( 27,  29,  -16,  -13, 1);
+
+  // ── Arabian Peninsula ──
+  fill( 12,  32,   36,   60, 1);
+  // Persian Gulf — clear
+  fill( 24,  30,   48,   57, 0);
+  fill( 22,  24,   56,   60, 1);  // Oman south
+
+  // ── Asia main ──
+  fill(  0,  78,   24,  150, 1);
+  // Caspian Sea
+  fill( 36,  48,   49,   55, 0);
+  // Black Sea
+  fill( 41,  47,   28,   42, 0);
+  // Re-add Turkey
+  fill( 36,  42,   26,   45, 1);
+  // Sea of Japan / Yellow Sea corridor — leave as land (close enough)
+  // Indian subcontinent (refine shape)
+  fill(  8,  24,   67,   80, 1);  // India west
+  fill(  8,  20,   80,   90, 1);  // India east + Bangladesh
+  fill( 20,  28,   80,   88, 1);  // India north + Myanmar
+  // Sri Lanka
+  fill(  6,  10,   79,   82, 1);
+  // Indochina
+  fill( 10,  24,   97,  108, 1);
+  fill(  2,  10,  100,  106, 1);  // Malaysia peninsula
+  // Korea
+  fill( 34,  42,  124,  130, 1);
+  // Japan main islands
+  fill( 31,  34,  130,  132, 1);  // Kyushu
+  fill( 33,  36,  130,  137, 1);  // Shikoku/Honshu west
+  fill( 35,  42,  136,  142, 1);  // Honshu
+  fill( 41,  45,  140,  146, 1);  // Hokkaido
+  // Taiwan
+  fill( 22,  26,  120,  122, 1);
+  // Philippines
+  fill( 10,  20,  118,  126, 1);
+  fill(  5,  10,  118,  122, 1);  // Mindanao
+  // Borneo
+  fill( -4,   8,  108,  119, 1);
+  // Sumatra
+  fill( -6,   6,   95,  109, 1);
+  // Java
+  fill( -8,  -5,  106,  115, 1);
+  // Sulawesi
+  fill( -4,   2,  120,  125, 1);
+  // New Guinea
+  fill( -8,   0,  131,  151, 1);
+
+  // ── Australia ──
+  fill(-38, -28,  114,  130, 1);  // west
+  fill(-28, -10,  114,  142, 1);  // north
+  fill(-38, -28,  130,  154, 1);  // east
+  fill(-40, -38,  144,  150, 1);  // Victoria/Tasmania
+  // Gulf of Carpentaria — clear
+  fill(-18, -12,  134,  140, 0);
+  // New Zealand
+  fill(-46, -34,  166,  178, 1);
+  fill(-46, -34,  168,  172, 1);  // South Island
+
+  return m;
+}
+// (old map unused — d3 handles land rendering)
+
+// ─────────────────────────────────────────
+//  GLOBE STATE
+// ─────────────────────────────────────────
+
+let rotLon      = -15;   // current longitude rotation
+let cityLat     = null;
+let cityLon     = null;
+let cityLabel   = '';
+let isDragging  = false;
+let lastX       = 0;
+let blinkOn     = true;
+let autoRotate  = true;
+let autoStopTmr = null;
+
+function formatHemisphere(lat, lon) {
+  const ns = lat >= 0 ? L('hemi_north') : L('hemi_south');
+  const ew = lon >= 0 ? L('hemi_east') : L('hemi_west');
+  return `${ns} / ${ew}`;
+}
+
+function formatCoords(lat, lon) {
+  if (lat === null || lon === null) return '--';
+  const latAbs = Math.abs(lat).toFixed(1);
+  const lonAbs = Math.abs(lon).toFixed(1);
+  const latDir = lat >= 0 ? 'N' : 'S';
+  const lonDir = lon >= 0 ? 'E' : 'W';
+  return `${latAbs}°${latDir} · ${lonAbs}°${lonDir}`;
+}
+
+function updateGlobeInfo() {
+  const cityEl = document.getElementById('infoCity');
+  const hemiEl = document.getElementById('infoHemisphere');
+  const coordEl = document.getElementById('infoCoords');
+  const modeEl = document.getElementById('infoMode');
+  if (!cityEl || !hemiEl || !coordEl || !modeEl) return;
+
+  cityEl.textContent = cityLabel ? cityLabel.toUpperCase() : L('no_target');
+  hemiEl.textContent = cityLat === null || cityLon === null ? '--' : formatHemisphere(cityLat, cityLon);
+  coordEl.textContent = formatCoords(cityLat, cityLon);
+  modeEl.textContent = autoRotate ? L('mode_auto') : L('mode_manual');
+}
+
+// ─────────────────────────────────────────
+//  CANVAS SETUP
+// ─────────────────────────────────────────
+const canvas   = document.getElementById('globe');
+const ctx      = canvas.getContext('2d');
+const wrap     = document.getElementById('globeWrap');
+const PX       = 3;    // macro-pixel size for pixel art look
+
+function setupCanvas() {
+  const sz = Math.min(wrap.clientWidth || 320, 380);
+  canvas.width  = sz;   // set width first
+  canvas.height = sz;   // set height after (setting width resets height to 150)
+  wrap.style.height = sz + 'px';
+  buildStars(sz);
+}
+
+// ─────────────────────────────────────────
+//  STARS (pre-rendered off-screen)
+// ─────────────────────────────────────────
+let starCanvas = null;
+function buildStars(sz) {
+  starCanvas = document.createElement('canvas');
+  starCanvas.width = starCanvas.height = sz;
+  const sc = starCanvas.getContext('2d');
+  sc.fillStyle = '#000510';
+  sc.fillRect(0, 0, sz, sz);
+  const R = sz / 2;
+  for (let i = 0; i < 160; i++) {
+    const x = Math.random() * sz;
+    const y = Math.random() * sz;
+    if ((x - R) ** 2 + (y - R) ** 2 > R * R + 10) {
+      const a = 0.3 + Math.random() * 0.7;
+      sc.fillStyle = `rgba(255,255,255,${a.toFixed(2)})`;
+      const s = Math.random() < 0.15 ? 2 : 1;
+      sc.fillRect(Math.round(x), Math.round(y), s, s);
+    }
+  }
+}
+
+// ─────────────────────────────────────────
+//  RENDER  (d3 geoOrthographic + pixelation)
+// ─────────────────────────────────────────
+function renderGlobe() {
+  if (!starCanvas || canvas.width < 10) return;
+  const sz = canvas.width;
+  const R  = sz / 2;
+  const cx = R, cy = R;
+
+  // ── Render at 1/PX resolution, then scale up for pixel art ──
+  const sr = Math.ceil(sz / PX);
+  if (!smallCanvas || smallCanvas.width !== sr) {
+    smallCanvas = document.createElement('canvas');
+    smallCanvas.width = smallCanvas.height = sr;
+  }
+  const sc  = smallCanvas.getContext('2d');
+  const sR  = sr / 2;
+
+  // Stars background (scaled down)
+  sc.drawImage(starCanvas, 0, 0, sr, sr);
+
+  // Clip to globe circle
+  sc.save();
+  sc.beginPath();
+  sc.arc(sR, sR, sR - 0.5, 0, Math.PI * 2);
+  sc.clip();
+
+  // Ocean gradient
+  const oceanGrad = sc.createRadialGradient(sR * 0.55, sR * 0.42, 0, sR, sR, sR * 1.1);
+  oceanGrad.addColorStop(0,   '#1a5e9a');
+  oceanGrad.addColorStop(0.6, '#0e3d72');
+  oceanGrad.addColorStop(1,   '#081e40');
+  sc.fillStyle = oceanGrad;
+  sc.fillRect(0, 0, sr, sr);
+
+  if (worldLand) {
+    const proj = d3.geoOrthographic()
+      .scale(sR - 0.5)
+      .translate([sR, sR])
+      .rotate([rotLon, 0, 0]);
+    const pathGen = d3.geoPath(proj, sc);
+
+    // Base land (tropical green)
+    sc.fillStyle = '#2d7a38';
+    sc.beginPath();
+    pathGen(worldLand);
+    sc.fill();
+
+    // Post-process: latitude-based terrain colors
+    const img = sc.getImageData(0, 0, sr, sr);
+    const d   = img.data;
+    for (let py = 0; py < sr; py++) {
+      const ny  = (py - sR) / sR;               // -1..1
+      if (ny * ny > 1) continue;
+      const lat = Math.asin(Math.max(-1, Math.min(1, ny))) * 180 / Math.PI;
+      const a   = Math.abs(lat);
+      for (let px = 0; px < sr; px++) {
+        const nx = (px - sR) / sR;
+        if (nx * nx + ny * ny > 1) continue;
+        const i = (py * sr + px) * 4;
+        // Detect land pixels (our base green: r<100, g>80, b<80)
+        if (d[i+1] > 80 && d[i] < 100 && d[i+2] < 80) {
+          let lr, lg, lb;
+          if (a > 63)      { lr=200; lg=220; lb=200; }  // tundra/ice edge
+          else if (a > 50) { lr= 75; lg=130; lb= 65; }  // temperate
+          else if (a > 35) { lr= 95; lg=145; lb= 70; }  // subtropical
+          else if (a < 12) { lr= 22; lg= 95; lb= 40; }  // tropical dark
+          else             { lr= 38; lg=115; lb= 50; }  // tropical
+          d[i]=lr; d[i+1]=lg; d[i+2]=lb;
+        }
+      }
+    }
+    sc.putImageData(img, 0, 0);
+
+    // Subtle graticule lines (10°)
+    const grat = d3.geoGraticule().step([30, 30])();
+    sc.strokeStyle = 'rgba(255,255,255,0.07)';
+    sc.lineWidth = 0.4;
+    sc.beginPath();
+    pathGen(grat);
+    sc.stroke();
+  }
+
+  sc.restore();
+
+  // Scale up with pixelated rendering
+  ctx.clearRect(0, 0, sz, sz);
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(smallCanvas, 0, 0, sz, sz);
+  ctx.restore();
+
+  // Atmosphere glow (at full resolution)
+  const atmo = ctx.createRadialGradient(cx, cy, R * 0.86, cx, cy, R);
+  atmo.addColorStop(0, 'rgba(0,0,0,0)');
+  atmo.addColorStop(1, 'rgba(15,60,130,0.55)');
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, 0, Math.PI * 2);
+  ctx.fillStyle = atmo;
+  ctx.fill();
+
+  // City marker (at full resolution using same projection)
+  if (cityLat !== null && worldLand) {
+    const fullProj = d3.geoOrthographic()
+      .scale(R - 1)
+      .translate([cx, cy])
+      .rotate([rotLon, 0, 0]);
+    const pt = fullProj([cityLon, cityLat]);
+    if (pt) {
+      const [sx, sy] = pt;
+      if (blinkOn) {
+        ctx.fillStyle = '#FFD700';
+        for (let dd = -5; dd <= 5; dd++) {
+          if (dd !== 0) { ctx.fillRect(sx+dd, sy, 1, 1); ctx.fillRect(sx, sy+dd, 1, 1); }
+        }
+        ctx.fillStyle = '#FF3333';
+        ctx.fillRect(sx-1, sy-1, 3, 3);
+      } else {
+        ctx.fillStyle = 'rgba(255,215,0,0.4)';
+        for (let dd = -3; dd <= 3; dd++) {
+          ctx.fillRect(sx+dd, sy, 1, 1); ctx.fillRect(sx, sy+dd, 1, 1);
+        }
+      }
+    }
+  }
+}
+
+// ─────────────────────────────────────────
+//  ANIMATION LOOP
+// ─────────────────────────────────────────
+setInterval(() => { blinkOn = !blinkOn; }, 500);
+
+(function loop() {
+  if (autoRotate && !isDragging) rotLon += 0.08;
+  renderGlobe();
+  requestAnimationFrame(loop);
+})();
+
+// ─────────────────────────────────────────
+//  DRAG TO ROTATE
+// ─────────────────────────────────────────
+function stopAuto() {
+  autoRotate = false;
+  updateGlobeInfo();
+  clearTimeout(autoStopTmr);
+  autoStopTmr = setTimeout(() => {
+    autoRotate = true;
+    updateGlobeInfo();
+  }, 4000);
+}
+
+canvas.addEventListener('mousedown', e => {
+  isDragging = true; lastX = e.clientX; stopAuto();
+});
+document.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  rotLon += (e.clientX - lastX) * 0.45;
+  lastX = e.clientX;
+});
+document.addEventListener('mouseup', () => { isDragging = false; });
+
+canvas.addEventListener('touchstart', e => {
+  isDragging = true; lastX = e.touches[0].clientX;
+  stopAuto(); e.preventDefault();
+}, { passive: false });
+document.addEventListener('touchmove', e => {
+  if (!isDragging) return;
+  rotLon += (e.touches[0].clientX - lastX) * 0.45;
+  lastX = e.touches[0].clientX;
+}, { passive: true });
+document.addEventListener('touchend', () => { isDragging = false; });
+
+// ─────────────────────────────────────────
+//  SMOOTH ROTATION TO TARGET
+// ─────────────────────────────────────────
+function animateTo(targetLon) {
+  autoRotate = false;
+  clearTimeout(autoStopTmr);
+  const startLon = rotLon;
+  let diff = (-targetLon) - startLon;
+  while (diff >  180) diff -= 360;
+  while (diff < -180) diff += 360;
+  const t0 = performance.now();
+  const dur = 900;
+  function step(t) {
+    const p = Math.min(1, (t - t0) / dur);
+    const e = p < 0.5 ? 2 * p * p : -1 + (4 - 2 * p) * p;
+    rotLon = startLon + e * diff;
+    if (p < 1) requestAnimationFrame(step);
+    else {
+      updateGlobeInfo();
+      autoStopTmr = setTimeout(() => {
+        autoRotate = true;
+        updateGlobeInfo();
+      }, 3000);
+    }
+  }
+  requestAnimationFrame(step);
+}
+
+// ─────────────────────────────────────────
+//  PIXEL ART ICONS
+// ─────────────────────────────────────────
+const T=null, Y='#FFD700', W='#ECEFF1', G='#78909C', B='#4FC3F7', E='#FFFF8D';
+const ICONS = {
+  sunny: [
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+    [T,T,T,T,T,T,Y,T,Y,T,T,T,T,T,T,T],
+    [T,T,T,Y,T,T,T,T,T,T,T,Y,T,T,T,T],
+    [T,T,T,T,T,T,Y,Y,Y,T,T,T,T,T,T,T],
+    [T,T,T,T,T,Y,Y,Y,Y,Y,T,T,T,T,T,T],
+    [T,T,Y,T,Y,Y,Y,Y,Y,Y,Y,T,Y,T,T,T],
+    [T,T,T,T,Y,Y,Y,Y,Y,Y,Y,T,T,T,T,T],
+    [T,T,Y,T,Y,Y,Y,Y,Y,Y,Y,T,Y,T,T,T],
+    [T,T,T,T,T,Y,Y,Y,Y,Y,T,T,T,T,T,T],
+    [T,T,T,T,T,T,Y,Y,Y,T,T,T,T,T,T,T],
+    [T,T,T,Y,T,T,T,T,T,T,T,Y,T,T,T,T],
+    [T,T,T,T,T,T,Y,T,Y,T,T,T,T,T,T,T],
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+  ],
+  cloudy: [
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+    [T,T,T,T,T,W,W,W,T,T,T,T,T,T,T,T],
+    [T,T,T,T,W,W,W,W,W,T,T,T,T,T,T,T],
+    [T,T,T,W,W,W,W,W,W,W,T,T,T,T,T,T],
+    [T,T,W,W,W,W,W,W,W,W,W,T,T,T,T,T],
+    [T,T,W,W,W,W,W,W,W,W,W,W,T,T,T,T],
+    [T,T,W,W,W,W,W,W,W,W,W,W,T,T,T,T],
+    [T,T,W,W,W,W,W,W,W,W,W,W,T,T,T,T],
+    [T,T,W,W,W,W,W,W,W,W,W,W,T,T,T,T],
+    [T,T,T,W,W,W,W,W,W,W,W,W,T,T,T,T],
+    [T,T,T,G,G,G,G,G,G,G,G,G,T,T,T,T],
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+  ],
+  partly: [
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+    [T,T,T,Y,T,T,Y,T,T,T,T,T,T,T,T,T],
+    [T,Y,T,T,T,T,T,T,Y,T,T,T,T,T,T,T],
+    [T,T,T,T,Y,Y,T,T,T,T,T,T,T,T,T,T],
+    [T,Y,T,Y,Y,Y,Y,T,Y,T,T,T,T,T,T,T],
+    [T,Y,T,Y,Y,Y,Y,T,W,W,W,T,T,T,T,T],
+    [T,T,T,Y,Y,W,W,W,W,W,W,W,T,T,T,T],
+    [T,Y,T,T,Y,W,W,W,W,W,W,W,W,T,T,T],
+    [T,T,T,T,W,W,W,W,W,W,W,W,W,T,T,T],
+    [T,T,T,W,W,W,W,W,W,W,W,W,W,W,T,T],
+    [T,T,W,W,W,W,W,W,W,W,W,W,W,W,W,T],
+    [T,T,W,W,W,W,W,W,W,W,W,W,W,W,W,T],
+    [T,W,W,W,W,W,W,W,W,W,W,W,W,W,W,T],
+    [T,T,G,G,G,G,G,G,G,G,G,G,G,G,T,T],
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+  ],
+  rainy: [
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+    [T,T,T,T,T,W,W,W,T,T,T,T,T,T,T,T],
+    [T,T,T,T,W,W,W,W,W,T,T,T,T,T,T,T],
+    [T,T,T,W,W,W,W,W,W,W,T,T,T,T,T,T],
+    [T,T,W,W,W,W,W,W,W,W,W,T,T,T,T,T],
+    [T,T,W,W,W,W,W,W,W,W,W,W,T,T,T,T],
+    [T,T,W,W,W,W,W,W,W,W,W,W,T,T,T,T],
+    [T,T,T,W,W,W,W,W,W,W,W,W,T,T,T,T],
+    [T,T,T,G,G,G,G,G,G,G,G,G,T,T,T,T],
+    [T,T,B,T,B,T,B,T,B,T,B,T,T,T,T,T],
+    [T,T,T,B,T,B,T,B,T,B,T,T,T,T,T,T],
+    [T,T,B,T,B,T,B,T,B,T,B,T,T,T,T,T],
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+  ],
+  snowy: [
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+    [T,T,T,T,T,W,W,W,T,T,T,T,T,T,T,T],
+    [T,T,T,T,W,W,W,W,W,T,T,T,T,T,T,T],
+    [T,T,T,W,W,W,W,W,W,W,T,T,T,T,T,T],
+    [T,T,W,W,W,W,W,W,W,W,W,T,T,T,T,T],
+    [T,T,W,W,W,W,W,W,W,W,W,W,T,T,T,T],
+    [T,T,W,W,W,W,W,W,W,W,W,W,T,T,T,T],
+    [T,T,T,W,W,W,W,W,W,W,W,W,T,T,T,T],
+    [T,T,T,G,G,G,G,G,G,G,G,G,T,T,T,T],
+    [T,T,W,T,W,T,W,T,W,T,W,T,T,T,T,T],
+    [T,T,T,W,T,W,T,W,T,W,T,T,T,T,T,T],
+    [T,T,W,T,W,T,W,T,W,T,W,T,T,T,T,T],
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+  ],
+  night: [ // crescent moon (outer r=6 center 7,7 / inner r=5 center 10,7)
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+    [T,T,T,T,T,W,W,W,W,W,W,T,T,T,T,T],
+    [T,T,T,W,W,W,W,W,T,T,T,T,T,T,T,T],
+    [T,T,W,W,W,W,W,T,T,T,T,T,T,T,T,T],
+    [T,T,W,W,W,W,T,T,T,T,T,T,T,T,T,T],
+    [T,T,W,W,W,W,T,T,T,T,T,T,T,T,T,T],
+    [T,T,W,W,W,W,T,T,T,T,T,T,T,T,T,T],
+    [T,T,W,W,W,W,T,T,T,T,T,T,T,T,T,T],
+    [T,T,W,W,W,W,T,T,T,T,T,T,T,T,T,T],
+    [T,T,W,W,W,W,W,T,T,T,T,T,T,T,T,T],
+    [T,T,T,W,W,W,W,W,T,T,T,T,T,T,T,T],
+    [T,T,T,T,T,W,W,W,W,W,W,T,T,T,T,T],
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+  ],
+  stormy: [
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+    [T,T,T,T,T,G,G,G,T,T,T,T,T,T,T,T],
+    [T,T,T,T,G,G,G,G,G,T,T,T,T,T,T,T],
+    [T,T,T,G,G,G,G,G,G,G,T,T,T,T,T,T],
+    [T,T,G,G,G,G,G,G,G,G,G,T,T,T,T,T],
+    [T,T,G,G,G,G,G,G,G,G,G,G,T,T,T,T],
+    [T,T,G,G,G,G,G,G,G,G,G,G,T,T,T,T],
+    [T,T,T,G,G,G,G,G,G,G,G,G,T,T,T,T],
+    [T,T,T,T,T,E,E,E,T,T,T,T,T,T,T,T],
+    [T,T,T,T,E,E,E,T,T,T,T,T,T,T,T,T],
+    [T,T,T,T,T,T,E,E,E,T,T,T,T,T,T,T],
+    [T,T,T,T,T,T,T,E,E,T,T,T,T,T,T,T],
+    [T,T,T,T,T,T,E,T,T,T,T,T,T,T,T,T],
+    [T,T,T,T,T,E,T,T,T,T,T,T,T,T,T,T],
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+    [T,T,T,T,T,T,T,T,T,T,T,T,T,T,T,T],
+  ],
+};
+
+function renderIcon(grid, px) {
+  const size = grid.length * px;
+  let rects = '';
+  grid.forEach((row, r) => row.forEach((col, c) => {
+    if (col) rects += `<rect x="${c*px}" y="${r*px}" width="${px}" height="${px}" fill="${col}"/>`;
+  }));
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">${rects}</svg>`;
+}
+
+function normalizeWeatherCode(code) {
+  const c = Number(code);
+
+  if (c === 0) return 113;
+  if (c === 1 || c === 2) return 116;
+  if (c === 3) return 119;
+  if (c === 45 || c === 48) return 248;
+  if (c === 51 || c === 53 || c === 55) return 263;
+  if (c === 56 || c === 57) return 281;
+  if (c === 61) return 293;
+  if (c === 63) return 299;
+  if (c === 65) return 305;
+  if (c === 66 || c === 67) return 281;
+  if (c === 71) return 323;
+  if (c === 73) return 329;
+  if (c === 75) return 335;
+  if (c === 77) return 323;
+  if (c === 80) return 353;
+  if (c === 81) return 299;
+  if (c === 82) return 305;
+  if (c === 85 || c === 86) return 368;
+  if (c === 95) return 386;
+  if (c === 96 || c === 99) return 374;
+
+  return c;
+}
+
+function iconName(code, isNight) {
+  const c = normalizeWeatherCode(code);
+  if (c === 113) return isNight ? 'night' : 'sunny';
+  if (c === 116) return isNight ? 'night' : 'partly';
+  if (c === 119 || c === 122) return 'cloudy';
+  if ([143,248,260].includes(c)) return 'fog';
+  if ([200,386,389,392,395].includes(c)) return 'stormy';
+  if ([179,227,230,323,326,329,332,335,338,368,371,374,377].includes(c)) return 'snowy';
+  if (c >= 176) return 'rainy';
+  return 'cloudy';
+}
+
+// ─────────────────────────────────────────
+//  I18N
+// ─────────────────────────────────────────
+const STRINGS = {
+  it: {
+    placeholder:  'CERCA CITTÀ...',
+    go:           'VAI',
+    fav_title:    'PREFERITI',
+    fav_empty:    'NESSUN PREFERITO\nPREMI <span class="star">★</span> PER AGGIUNGERE',
+    fav_full:     'MAX 10 CITTÀ NEI PREFERITI',
+    gps_denied:   'POSIZIONE DISABILITATA',
+    gps_error:    'CITTÀ NON TROVATA',
+    forecast_24h: 'PREVISIONI 24H',
+    drag_hint:    'TRASCINA PER RUOTARE',
+    not_found:    'NON TROVATA',
+    error:        'ERRORE',
+    no_city:      'CERCA UNA CITTÀ\nPER LE PREVISIONI',
+    globe_data:   'DATI GLOBO',
+info_city:    'CITTÀ',
+info_hemisphere: 'EMISFERO',
+info_coords:  'LAT / LON',
+info_mode:    'MODALITÀ',
+mode_auto:    'ROTAZ. AUTO',
+mode_manual:  'DRAG MANUALE',
+no_target:    'NESSUN TARGET',
+hemi_north:   'NORD',
+hemi_south:   'SUD',
+hemi_east:    'EST',
+hemi_west:    'OVEST',
+  },
+  en: {
+    placeholder:  'SEARCH CITY...',
+    go:           'GO',
+    fav_title:    'FAVORITES',
+    fav_empty:    'NO FAVORITES\nPRESS <span class="star">★</span> TO ADD',
+    fav_full:     'MAX 10 CITIES IN FAVORITES',
+    gps_denied:   'LOCATION DISABLED',
+    gps_error:    'CITY NOT FOUND',
+    forecast_24h: '24H FORECAST',
+    drag_hint:    'DRAG TO ROTATE',
+    not_found:    'NOT FOUND',
+    error:        'ERROR',
+    no_city:      'SEARCH A CITY\nTO SEE FORECAST',
+    globe_data:   'GLOBE DATA',
+info_city:    'CITY',
+info_hemisphere: 'HEMISPHERE',
+info_coords:  'LAT / LON',
+info_mode:    'MODE',
+mode_auto:    'AUTO ROTATE',
+mode_manual:  'MANUAL DRAG',
+no_target:    'NO TARGET',
+hemi_north:   'NORTH',
+hemi_south:   'SOUTH',
+hemi_east:    'EAST',
+hemi_west:    'WEST',
+  },
+  es: {
+    placeholder:  'BUSCAR CIUDAD...',
+    go:           'IR',
+    fav_title:    'FAVORITOS',
+    fav_empty:    'SIN FAVORITOS\nPULSA <span class="star">★</span> PARA AÑADIR',
+    fav_full:     'MÁX 10 CIUDADES EN FAVORITOS',
+    gps_denied:   'UBICACIÓN DESACTIVADA',
+    gps_error:    'CIUDAD NO HALLADA',
+    forecast_24h: 'PRÓXIMAS 24H',
+    drag_hint:    'ARRASTRA PARA ROTAR',
+    not_found:    'NO ENCONTRADA',
+    error:        'ERROR',
+    no_city:      'BUSCA UNA CIUDAD\nPARA PREVISIONES',
+    globe_data:   'DATOS GLOBO',
+info_city:    'CIUDAD',
+info_hemisphere: 'HEMISFERIO',
+info_coords:  'LAT / LON',
+info_mode:    'MODO',
+mode_auto:    'ROTACIÓN AUTO',
+mode_manual:  'ARRASTRE MAN.',
+no_target:    'SIN OBJETIVO',
+hemi_north:   'NORTE',
+hemi_south:   'SUR',
+hemi_east:    'ESTE',
+hemi_west:    'OESTE',
+  },
+  fr: {
+    placeholder:  'CHERCHER VILLE...',
+    go:           'OK',
+    fav_title:    'FAVORIS',
+    fav_empty:    'PAS DE FAVORIS\nAPPUYEZ <span class="star">★</span> POUR AJOUTER',
+    fav_full:     'MAX 10 VILLES EN FAVORIS',
+    gps_denied:   'LOCALISATION DÉSACTIVÉE',
+    gps_error:    'VILLE INTROUVABLE',
+    forecast_24h: 'PRÉVISIONS 24H',
+    drag_hint:    'FAITES GLISSER',
+    not_found:    'INTROUVABLE',
+    error:        'ERREUR',
+    no_city:      'CHERCHEZ UNE VILLE\nPOUR LES PRÉVISIONS',
+    globe_data:   'DONNÉES GLOBE',
+info_city:    'VILLE',
+info_hemisphere: 'HÉMISPHÈRE',
+info_coords:  'LAT / LON',
+info_mode:    'MODE',
+mode_auto:    'ROTATION AUTO',
+mode_manual:  'GLISSER MAN.',
+no_target:    'AUCUNE CIBLE',
+hemi_north:   'NORD',
+hemi_south:   'SUD',
+hemi_east:    'EST',
+hemi_west:    'OUEST',
+  },
+  de: {
+    placeholder:  'STADT SUCHEN...',
+    go:           'OK',
+    fav_title:    'FAVORITEN',
+    fav_empty:    'KEINE FAVORITEN\n<span class="star">★</span> DRÜCKEN ZUM HINZUFÜGEN',
+    fav_full:     'MAX 10 STÄDTE IN FAVORITEN',
+    gps_denied:   'STANDORT DEAKTIVIERT',
+    gps_error:    'STADT NICHT GEFUNDEN',
+    forecast_24h: '24H VORHERSAGE',
+    drag_hint:    'ZIEHEN ZUM DREHEN',
+    not_found:    'NICHT GEFUNDEN',
+    error:        'FEHLER',
+    no_city:      'STADT SUCHEN\nFÜR VORHERSAGE',
+    globe_data:   'GLOBUS-DATEN',
+info_city:    'STADT',
+info_hemisphere: 'HEMISPHÄRE',
+info_coords:  'LAT / LON',
+info_mode:    'MODUS',
+mode_auto:    'AUTO-DREHUNG',
+mode_manual:  'MANUELLER DRAG',
+no_target:    'KEIN ZIEL',
+hemi_north:   'NORD',
+hemi_south:   'SÜD',
+hemi_east:    'OST',
+hemi_west:    'WEST',
+  },
+};
+
+function detectLang() {
+  const nav = (navigator.language || 'en').toLowerCase().slice(0, 2);
+  return ['it','en','es','fr','de'].includes(nav) ? nav : 'en';
+}
+let currentLang = detectLang();
+function L(key) { return STRINGS[currentLang]?.[key] ?? STRINGS.en[key]; }
+
+function updateLangUI() {
+  document.getElementById('cityInput').placeholder = L('placeholder');
+  document.getElementById('searchBtn').textContent  = L('go');
+  document.getElementById('forecastLbl').textContent = L('forecast_24h');
+  document.getElementById('dragHint').textContent    = L('drag_hint');
+  document.getElementById('noDataMsg').textContent   = L('no_city');
+  const globeDataLbl = document.getElementById('globeDataLbl');
+  const infoCityLbl = document.getElementById('infoCityLbl');
+  const infoHemisphereLbl = document.getElementById('infoHemisphereLbl');
+  const infoCoordsLbl = document.getElementById('infoCoordsLbl');
+  const infoModeLbl = document.getElementById('infoModeLbl');
+
+  if (globeDataLbl) globeDataLbl.textContent = L('globe_data');
+  if (infoCityLbl) infoCityLbl.textContent = L('info_city');
+  if (infoHemisphereLbl) infoHemisphereLbl.textContent = L('info_hemisphere');
+  if (infoCoordsLbl) infoCoordsLbl.textContent = L('info_coords');
+  if (infoModeLbl) infoModeLbl.textContent = L('info_mode');
+  const lbl = document.getElementById('favTitleLbl');
+  if (lbl) lbl.textContent = L('fav_title');
+}
+
+// ─────────────────────────────────────────
+//  FAVORITES
+// ─────────────────────────────────────────
+const FAV_KEY       = 'pw_favs';
+const CONTACT_EMAIL = 'weathaff@tommyzaffa.com';
+
+function loadFavs() {
+  try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; } catch { return []; }
+}
+function saveFavs(favs) { localStorage.setItem(FAV_KEY, JSON.stringify(favs)); }
+
+function showToast(msg) {
+  document.querySelectorAll('.toast').forEach(t => t.remove());
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2600);
+}
+
+function toggleFav(cityName) {
+  let favs = loadFavs();
+  const idx = favs.findIndex(f => f.toLowerCase() === cityName.toLowerCase());
+  if (idx >= 0) {
+    favs.splice(idx, 1);
+  } else {
+    if (favs.length >= 10) { showToast(L('fav_full')); return; }
+    favs.push(cityName);
+  }
+  saveFavs(favs);
+  updateStarBtn();
+  updateFavToggleBtn();
+}
+
+function removeFav(cityName) {
+  saveFavs(loadFavs().filter(f => f.toLowerCase() !== cityName.toLowerCase()));
+  updateStarBtn();
+  updateFavToggleBtn();
+  renderFavList();
+}
+
+function updateStarBtn() {
+  const btn = document.getElementById('starBtn');
+  if (!btn || !cityLabel) return;
+  btn.classList.toggle('active', loadFavs().some(f => f.toLowerCase() === cityLabel.toLowerCase()));
+}
+
+function updateFavToggleBtn() {
+  const btn = document.getElementById('favToggle');
+  if (!btn) return;
+  btn.classList.toggle('has-favs', loadFavs().length > 0);
+}
+
+function renderFavList() {
+  const favs = loadFavs();
+  const list = document.getElementById('favList');
+  if (!list) return;
+  if (!favs.length) {
+    list.innerHTML = `<div class="fav-empty">${L('fav_empty')}</div>`;
+    return;
+  }
+  list.innerHTML = favs.map(f =>
+    `<div class="fav-item">
+      <button class="fav-load" onclick="loadFromFav('${f.replace(/'/g,"\\'")}')">&#9733; ${f.toUpperCase()}</button>
+      <button class="fav-del"  onclick="removeFav('${f.replace(/'/g,"\\'")}')">×</button>
+    </div>`
+  ).join('');
+}
+
+function openFavOverlay() { renderFavList(); document.getElementById('favOverlay').classList.add('open'); }
+function closeFavOverlay() { document.getElementById('favOverlay').classList.remove('open'); }
+
+function loadFromFav(city) {
+  closeFavOverlay();
+  document.getElementById('cityInput').value = city;
+  gpsBtn.classList.remove('gps-active');
+  localStorage.removeItem('wa_gps_city');
+  fetchCity(city);
+}
+
+    function reportBug() {
+      const searched =
+        document.getElementById('cityInput').value.trim() ||
+        localStorage.getItem('wa_query_city') ||
+        '?';
+
+      const shown = cityLabel || '?';
+      const subj = encodeURIComponent('WeathAff Globe - Bug Report');
+      const body = encodeURIComponent(
+        `City searched: ${searched}\nCity shown: ${shown}\n\nDescribe the issue:\n\n`
+      );
+      window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subj}&body=${body}`;
+    }
+
+// ─────────────────────────────────────────
+//  WEATHER FETCH
+// ─────────────────────────────────────────
+// ── Geocoding cache (shared with weather page via same key) ──
+const GEO_CACHE_KEY = 'wa_geo';
+const GEO_TS_KEY    = 'wa_geo_ts';
+function getCachedGeo(city) {
+  try { return (JSON.parse(localStorage.getItem(GEO_CACHE_KEY)||'{}'))[city.toLowerCase()]||null; }
+  catch { return null; }
+}
+function setCachedGeo(city, data) {
+  try {
+    const c = JSON.parse(localStorage.getItem(GEO_CACHE_KEY)||'{}');
+    c[city.toLowerCase()] = data;
+    const keys = Object.keys(c);
+    if (keys.length > 40) delete c[keys[0]];
+    localStorage.setItem(GEO_CACHE_KEY, JSON.stringify(c));
+  } catch {}
+}
+
+
+async function geocodeWithOpenMeteo(city) {
+  const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=${encodeURIComponent(currentLang)}&format=json`);
+  if (!res.ok) throw new Error('OPEN_METEO_GEO_FAILED');
+  const data = await res.json();
+  const hit = data?.results?.[0];
+  if (!hit) throw new Error('OPEN_METEO_NO_RESULT');
+
+  return {
+    lat: Number(hit.latitude),
+    lon: Number(hit.longitude),
+    geoName: hit.name || city,
+    address: {
+      country_code: (hit.country_code || '').toLowerCase()
+    },
+    timezone: hit.timezone || 'auto'
+  };
+}
+
+async function fetchHourlyForecast(lat, lon, timezone) {
+  const params = new URLSearchParams({
+    latitude: String(lat),
+    longitude: String(lon),
+    hourly: 'temperature_2m,weather_code',
+    timezone: timezone || 'auto',
+    forecast_days: '2'
+  });
+
+  const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`);
+  if (!res.ok) throw new Error('OPEN_METEO_FORECAST_FAILED');
+  const data = await res.json();
+  if (!data?.hourly?.time?.length) throw new Error('OPEN_METEO_NO_HOURLY');
+  return data;
+}
+
+async function fetchCity(cityStr) {
+  const bar = document.getElementById('cityBar');
+  bar.innerHTML = '<span>...</span>';
+  try {
+    const cleanCity = cityStr.trim();
+    if (!cleanCity) {
+      bar.innerHTML = `<span>${L('not_found')}</span>`;
+      return;
+    }
+
+    let geoLat, geoLon, geoName, address, timezone;
+    const cached = getCachedGeo(cleanCity);
+
+    if (cached) {
+      ({ lat: geoLat, lon: geoLon, geoName, address, timezone } = cached);
+    } else {
+      const geoPayload = await geocodeWithOpenMeteo(cleanCity);
+      ({ lat: geoLat, lon: geoLon, geoName, address, timezone } = geoPayload);
+      setCachedGeo(cleanCity, { lat: geoLat, lon: geoLon, geoName, address, timezone });
+    }
+
+    cityLat = Number(geoLat);
+    cityLon = Number(geoLon);
+    cityLabel = geoName || cleanCity;
+    updateGlobeInfo();
+
+    localStorage.setItem('wa_query_city', cleanCity);
+    bar.innerHTML = `<span>${cityLabel.toUpperCase()}</span><button class="star-btn" id="starBtn" onclick="toggleFav(cityLabel)">&#9733;</button>`;
+    updateStarBtn();
+    updateFavToggleBtn();
+
+    animateTo(cityLon);
+
+    const data = await fetchHourlyForecast(cityLat, cityLon, timezone);
+    renderHourly(data);
+  } catch (e) {
+    cityLat = null;
+    cityLon = null;
+    cityLabel = '';
+    updateGlobeInfo();
+    document.getElementById('hourlyStrip').innerHTML = `<div class="no-data">${L('no_city')}</div>`;
+    bar.innerHTML = `<span>${L('error')}</span>`;
+  }
+}
+
+// ─────────────────────────────────────────
+//  HOURLY FORECAST
+// ─────────────────────────────────────────
+function renderHourly(data) {
+  const strip = document.getElementById('hourlyStrip');
+  const times = data.hourly?.time || [];
+  const temps = data.hourly?.temperature_2m || [];
+  const codes = data.hourly?.weather_code || [];
+
+  if (!times.length) {
+    strip.innerHTML = `<div class="no-data">${L('no_city')}</div>`;
+    return;
+  }
+
+  const now = Date.now();
+  let startIdx = times.findIndex(t => new Date(t).getTime() >= now - 30 * 60 * 1000);
+  if (startIdx < 0) startIdx = 0;
+
+  const slots = times.slice(startIdx, startIdx + 10).map((time, i) => ({
+    time,
+    temp: temps[startIdx + i],
+    code: codes[startIdx + i]
+  }));
+
+  strip.innerHTML = slots.map((slot, i) => {
+    const dt = new Date(slot.time);
+    const hh = dt.getHours();
+    const timeStr = String(hh).padStart(2, '0') + ':00';
+    const isNight = hh >= 20 || hh < 6;
+    const iname = iconName(normalizeWeatherCode(slot.code), isNight);
+    const temp = `${Math.round(slot.temp)}°`;
+
+    return `<div class="hour-slot ${i === 0 ? 'current' : ''}">
+      <div class="h-time">${timeStr}</div>
+      <div class="h-icon">${renderIcon(ICONS[iname] || ICONS.cloudy, 4)}</div>
+      <div class="h-temp">${temp}</div>
+    </div>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────
+//  EVENTS
+// ─────────────────────────────────────────
+document.getElementById('searchBtn').addEventListener('click', () => {
+  const v = document.getElementById('cityInput').value.trim();
+  if (v) {
+    localStorage.setItem('wa_query_city', v);
+    fetchCity(v);
+  }
+});
+
+document.getElementById('cityInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const v = e.target.value.trim();
+    if (v) {
+      localStorage.setItem('wa_query_city', v);
+      fetchCity(v);
+    }
+  }
+});
+document.getElementById('backBtn').addEventListener('click', (e) => {
+  const originalCity =
+    document.getElementById('cityInput').value.trim() ||
+    localStorage.getItem('wa_query_city') ||
+    cityLabel ||
+    'Roma';
+
+  localStorage.setItem('wa_query_city', originalCity);
+  safeNavigate(`index.html?city=${encodeURIComponent(originalCity)}`);
+});
+document.getElementById('bugBtn').addEventListener('click', reportBug);
+document.getElementById('favToggle').addEventListener('click', openFavOverlay);
+document.getElementById('favBackdrop').addEventListener('click', closeFavOverlay);
+document.getElementById('favClose').addEventListener('click', closeFavOverlay);
+
+// Unified focus border on search + GO
+const cityInputEl = document.getElementById('cityInput');
+cityInputEl.addEventListener('focus', () => document.getElementById('searchRow').classList.add('focused'));
+cityInputEl.addEventListener('blur',  () => document.getElementById('searchRow').classList.remove('focused'));
+
+// ─────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────
+window.addEventListener('resize', setupCanvas);
+window.addEventListener('load', setupCanvas);
+if (document.readyState === 'complete') setupCanvas();
+
+updateLangUI();
+updateFavToggleBtn();
+updateGlobeInfo();
+
+function showToast(msg) {
+  document.querySelectorAll('.toast').forEach(t => t.remove());
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2600);
+}
+
+const gpsBtn = document.getElementById('gpsBtn');
+// cityInputEl già dichiarato sopra (riga focus/blur)
+
+cityInputEl.addEventListener('input', () => {
+  gpsBtn.classList.remove('gps-active');
+  localStorage.removeItem('wa_gps_city');
+});
+
+gpsBtn.addEventListener('click', () => {
+  if (!navigator.geolocation) { showToast(L('gps_denied')); return; }
+  navigator.geolocation.getCurrentPosition(
+    async pos => {
+      try {
+        const { latitude: lt, longitude: ln } = pos.coords;
+        const r = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lt}&lon=${ln}&accept-language=${encodeURIComponent(currentLang)}`,
+          { headers: { 'User-Agent': 'WeathAff/1.0' } }
+        );
+        const j = await r.json();
+        const city = j?.address?.city
+                  || j?.address?.town
+                  || j?.address?.village
+                  || j?.address?.county
+                  || null;
+        if (city) {
+          cityInputEl.value = city;
+          localStorage.setItem('wa_query_city', city);
+          localStorage.setItem('wa_gps_city', city);
+          gpsBtn.classList.add('gps-active');
+          fetchCity(city);
+        } else {
+          showToast(L('gps_error'));
+        }
+      } catch {
+        showToast(L('gps_error'));
+      }
+    },
+    () => showToast(L('gps_denied')),
+    { timeout: 8000, enableHighAccuracy: false }
+  );
+});
+
+const params = new URLSearchParams(location.search);
+const initCity = params.get('city') || localStorage.getItem('wa_query_city');
+
+if (initCity) {
+  localStorage.setItem('wa_query_city', initCity);
+  document.getElementById('cityInput').value = initCity;
+  fetchCity(initCity);
+  // ripristina segnalino GPS se la città è quella della posizione
+  if (localStorage.getItem('wa_gps_city')?.toLowerCase() === initCity.toLowerCase()) {
+    gpsBtn.classList.add('gps-active');
+  }
+}
+
+let isNavigating = false;
+
+function safeNavigate(url) {
+  lockPortrait();
+  if (isNavigating) return;
+  isNavigating = true;
+
+  document.body.classList.add('is-leaving');
+
+  setTimeout(() => {
+    location.href = url;
+  }, 420);
+}
+
+// reset se la pagina torna dal bfcache / back-forward cache
+window.addEventListener('pageshow', () => {
+  isNavigating = false;
+  document.body.classList.remove('is-leaving');
+  lockPortrait();
+});
+
+function lockPortrait() {
+  const orientationApi = screen.orientation || screen.msOrientation || screen.mozOrientation;
+  if (orientationApi?.lock) {
+    orientationApi.lock('portrait').catch(() => {});
+  }
+}
+
+window.addEventListener('orientationchange', () => {
+  setTimeout(lockPortrait, 60);
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+  lockPortrait();
+  setTimeout(() => {
+    document.body.classList.remove('is-entering');
+  }, 80);
+});
+
+// iOS WKWebView: abilita :active su tutti i bottoni
+document.addEventListener('touchstart', function(){}, { passive: true });
+
+// Rimuovi focus (bordo colorato) subito dopo ogni tocco su bottoni icona
+document.querySelectorAll('.back-btn, .gps-btn, .fav-btn').forEach(btn => {
+  btn.addEventListener('pointerup', () => btn.blur());
+});
+</script>
+</body>
+</html>
