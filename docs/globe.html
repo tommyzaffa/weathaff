@@ -536,7 +536,10 @@ body::before {
   z-index: 9999;
 }
 
-body.is-entering::after,
+body.is-entering::after {
+  opacity: 1;
+  transition: none;
+}
 body.is-leaving::after {
   opacity: 1;
 }
