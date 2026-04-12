@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <title>WeathAff — Globe</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -24,7 +24,7 @@
   html {
   min-height: 100%;
   width: 100%;
-  background-color: #2f4f98;
+  background-color: #0b1430;
   overflow-x: hidden;
   overscroll-behavior-y: none;
   scrollbar-width: none;
@@ -529,7 +529,7 @@ body::before {
   content: "";
   position: fixed;
   inset: 0;
-  background: #2f4f98;
+  background: #0b1430;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.4s ease-in-out;
@@ -1068,8 +1068,8 @@ document.addEventListener('mouseup', () => { isDragging = false; });
 
 canvas.addEventListener('touchstart', e => {
   isDragging = true; lastX = e.touches[0].clientX;
-  stopAuto(); e.preventDefault();
-}, { passive: false });
+  stopAuto();
+}, { passive: true });
 document.addEventListener('touchmove', e => {
   if (!isDragging) return;
   rotLon += (e.touches[0].clientX - lastX) * 0.45;
