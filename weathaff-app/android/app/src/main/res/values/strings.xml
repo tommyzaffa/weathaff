@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">WeathAff</string>
-    <string name="title_activity_main">WeathAff</string>
-    <string name="package_name">com.tommyzaffa.weathaff</string>
-    <string name="custom_url_scheme">com.tommyzaffa.weathaff</string>
-</resources>
