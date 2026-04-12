@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
   <title>WeathAff</title>
   <meta name="description" content="WeathAff - meteo pixel art">
-  <meta name="theme-color" content="#0b1430">
+  <meta name="theme-color" content="#2f4f98">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
@@ -41,7 +41,7 @@
 html {
   min-height: 100%;
   width: 100%;
-  background-color: #0b1430;
+  background-color: #2f4f98;
   overflow: hidden;
   overscroll-behavior-y: none;
   scrollbar-width: none;
@@ -51,7 +51,7 @@ html::-webkit-scrollbar {
 }
 
     .app-splash {
-      display: none;
+      display: flex;
       position: fixed;
       inset: 0;
       background: #0b1430 url('splash.png') center 46% / cover no-repeat;
@@ -61,10 +61,6 @@ html::-webkit-scrollbar {
       opacity: 1;
       transition: opacity 0.45s ease;
     }
-
-.app-splash:not([hidden]) {
-  display: flex;
-}
 
 .app-splash.hidden {
   opacity: 0;
@@ -601,7 +597,7 @@ body::before {
   </style>
 </head>
 <body class="is-entering">
-<div id="appSplash" class="app-splash" aria-label="WeathAff splash" hidden></div>
+<div id="appSplash" class="app-splash" aria-label="WeathAff splash"></div>
 <div class="app">
 
   <div class="header">
@@ -1694,11 +1690,6 @@ window.addEventListener('load', () => {
   }
 
   sessionStorage.setItem('wa_seen_splash', '1');
-  splash.hidden = false;
-
-  requestAnimationFrame(() => {
-    splash.hidden = false;
-  });
 
   setTimeout(() => {
     splash.classList.add('hidden');
