@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="it" style="background:#0b1430">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
@@ -369,24 +369,7 @@ body::before {
     .anim-storm  { animation: storm-flash 4s ease-in-out infinite; }
     .cursor      { animation: cur-blink 1s step-end infinite; }
 
-    body::after {
-      content: "";
-      position: fixed;
-      inset: 0;
-      background: #0b1430;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.4s ease-in-out;
-      z-index: 9999;
-    }
-
-    body.is-entering::after {
-      opacity: 1;
-      transition: none;
-    }
-    body.is-leaving::after {
-      opacity: 1;
-    }
+    /* page overlay is now a real DOM element (#pageOverlay) */
 
     /* ── TOAST ── */
     .toast {
@@ -601,7 +584,8 @@ body::before {
 /* Remove .screen-content rule if present */
   </style>
 </head>
-<body class="is-entering">
+<body>
+<div id="pageOverlay" style="position:fixed;inset:0;background:#0b1430;z-index:9999;pointer-events:none;"></div>
 <div id="appSplash" class="app-splash" aria-label="WeathAff splash"></div>
 <div class="app">
 
@@ -1643,7 +1627,9 @@ function safeNavigate(url) {
   if (isNavigating) return;
   isNavigating = true;
 
-  document.body.classList.add('is-leaving');
+  var ov = document.getElementById('pageOverlay');
+  ov.style.transition = 'opacity 0.4s ease-in-out';
+  ov.style.opacity = '1';
 
   setTimeout(() => {
     location.href = url;
@@ -1653,7 +1639,9 @@ function safeNavigate(url) {
 // reset se la pagina torna dal bfcache / back-forward cache
 window.addEventListener('pageshow', () => {
   isNavigating = false;
-  document.body.classList.remove('is-leaving');
+  var ov = document.getElementById('pageOverlay');
+  ov.style.opacity = '1';
+  ov.style.transition = 'none';
   lockPortrait();
 });
 
@@ -1670,8 +1658,10 @@ window.addEventListener('orientationchange', () => {
 
 window.addEventListener('DOMContentLoaded', () => {
   lockPortrait();
+  var ov = document.getElementById('pageOverlay');
   setTimeout(() => {
-    document.body.classList.remove('is-entering');
+    ov.style.transition = 'opacity 0.4s ease-in-out';
+    ov.style.opacity = '0';
   }, 80);
 });
 

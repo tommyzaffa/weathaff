@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="background:#0b1430">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
@@ -525,24 +525,7 @@ body::before {
     font-size: 12px;
   }
 
-  body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background: #0b1430;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.4s ease-in-out;
-  z-index: 9999;
-}
-
-body.is-entering::after {
-  opacity: 1;
-  transition: none;
-}
-body.is-leaving::after {
-  opacity: 1;
-}
+  /* page overlay is now a real DOM element (#pageOverlay) */
 
   /* ── TOAST ── */
   .toast {
@@ -562,7 +545,8 @@ body.is-leaving::after {
   }
 </style>
 </head>
-<body class="is-entering">
+<body>
+<div id="pageOverlay" style="position:fixed;inset:0;background:#0b1430;z-index:9999;pointer-events:none;"></div>
 <div class="app">
 
   <div class="header">
@@ -1807,7 +1791,9 @@ function safeNavigate(url) {
   if (isNavigating) return;
   isNavigating = true;
 
-  document.body.classList.add('is-leaving');
+  var ov = document.getElementById('pageOverlay');
+  ov.style.transition = 'opacity 0.4s ease-in-out';
+  ov.style.opacity = '1';
 
   setTimeout(() => {
     location.href = url;
@@ -1817,7 +1803,9 @@ function safeNavigate(url) {
 // reset se la pagina torna dal bfcache / back-forward cache
 window.addEventListener('pageshow', () => {
   isNavigating = false;
-  document.body.classList.remove('is-leaving');
+  var ov = document.getElementById('pageOverlay');
+  ov.style.opacity = '1';
+  ov.style.transition = 'none';
   lockPortrait();
 });
 
@@ -1834,8 +1822,10 @@ window.addEventListener('orientationchange', () => {
 
 window.addEventListener('DOMContentLoaded', () => {
   lockPortrait();
+  var ov = document.getElementById('pageOverlay');
   setTimeout(() => {
-    document.body.classList.remove('is-entering');
+    ov.style.transition = 'opacity 0.4s ease-in-out';
+    ov.style.opacity = '0';
   }, 80);
 });
 
