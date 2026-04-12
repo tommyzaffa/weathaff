@@ -53,13 +53,15 @@ html::-webkit-scrollbar {
     .app-splash {
       display: flex;
       position: fixed;
-      inset: -5px;
+      inset: 0;
       background: #0b1430 url('splash.png') center 46% / cover no-repeat;
       align-items: center;
       justify-content: center;
       z-index: 99999;
       opacity: 1;
       transition: opacity 0.45s ease;
+      transform: scale(1.05);
+      transform-origin: center center;
     }
 
 .app-splash.hidden {
@@ -378,7 +380,10 @@ body::before {
       z-index: 9999;
     }
 
-    body.is-entering::after,
+    body.is-entering::after {
+      opacity: 1;
+      transition: none;
+    }
     body.is-leaving::after {
       opacity: 1;
     }
