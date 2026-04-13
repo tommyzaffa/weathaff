@@ -95,6 +95,10 @@ body::before {
   position: relative;
   left: 0;
   right: 0;
+  opacity: 0;
+}
+.app.visible {
+  opacity: 1;
 }
 
   /* ── HEADER ── */
@@ -1791,6 +1795,10 @@ function safeNavigate(url) {
   if (isNavigating) return;
   isNavigating = true;
 
+  // Hide content immediately
+  var app = document.querySelector('.app');
+  if (app) app.classList.remove('visible');
+
   var ov = document.getElementById('pageOverlay');
   ov.style.transition = 'opacity 0.4s ease-in-out';
   ov.style.opacity = '1';
@@ -1805,9 +1813,11 @@ function fadeOutOverlay() {
   if (!ov) return;
   ov.style.opacity = '1';
   ov.style.transition = 'none';
-  // Force reflow so opacity:1 is committed before we start the transition
   void ov.offsetWidth;
   setTimeout(() => {
+    // Show content, then fade out overlay
+    var app = document.querySelector('.app');
+    if (app) app.classList.add('visible');
     ov.style.transition = 'opacity 0.4s ease-in-out';
     ov.style.opacity = '0';
   }, 60);
