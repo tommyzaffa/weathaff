@@ -604,7 +604,7 @@ body::before {
 </head>
 <body>
 <div id="appSplash" class="app-splash" aria-label="WeathAff splash"></div>
-<div id="pageOverlay" style="position:fixed;inset:-50px;background:#0b1430;z-index:999999;pointer-events:none;opacity:1;"></div>
+<div id="pageOverlay" style="position:fixed;inset:-50px;background:#0b1430;z-index:9999;pointer-events:none;opacity:1;"></div>
 <div class="app">
 
   <div class="header">
@@ -1664,9 +1664,7 @@ function fadeOutOverlay() {
   ov.style.opacity = '1';
   ov.style.transition = 'none';
   void ov.offsetWidth;
-  // If splash is present, wait longer for iOS viewport to settle
-  var splash = document.getElementById('appSplash');
-  var delay = splash ? 400 : 60;
+  var delay = 60;
   setTimeout(() => {
     ov.style.transition = 'opacity 0.4s ease-in-out';
     ov.style.opacity = '0';
