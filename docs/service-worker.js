@@ -1,6 +1,6 @@
 // Minimal service worker for PWA installability.
 // Network-first with cache fallback for offline use.
-const CACHE = 'weathaff-v1';
+const CACHE = 'weathaff-v2';
 const CORE = [
   './',
   './index.html',
