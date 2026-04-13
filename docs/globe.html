@@ -546,7 +546,7 @@ body::before {
 </style>
 </head>
 <body>
-<div id="pageOverlay" style="position:fixed;inset:0;background:#0b1430;z-index:9999;pointer-events:none;"></div>
+<div id="pageOverlay" style="position:fixed;inset:-50px;background:#0b1430;z-index:99999;pointer-events:none;opacity:1;"></div>
 <div class="app">
 
   <div class="header">
@@ -1800,13 +1800,24 @@ function safeNavigate(url) {
   }, 420);
 }
 
-// reset se la pagina torna dal bfcache / back-forward cache
-window.addEventListener('pageshow', () => {
-  isNavigating = false;
+function fadeOutOverlay() {
   var ov = document.getElementById('pageOverlay');
+  if (!ov) return;
   ov.style.opacity = '1';
   ov.style.transition = 'none';
+  // Force reflow so opacity:1 is committed before we start the transition
+  void ov.offsetWidth;
+  setTimeout(() => {
+    ov.style.transition = 'opacity 0.4s ease-in-out';
+    ov.style.opacity = '0';
+  }, 60);
+}
+
+// reset se la pagina torna dal bfcache / back-forward cache
+window.addEventListener('pageshow', (e) => {
+  isNavigating = false;
   lockPortrait();
+  fadeOutOverlay();
 });
 
 function lockPortrait() {
@@ -1822,11 +1833,7 @@ window.addEventListener('orientationchange', () => {
 
 window.addEventListener('DOMContentLoaded', () => {
   lockPortrait();
-  var ov = document.getElementById('pageOverlay');
-  setTimeout(() => {
-    ov.style.transition = 'opacity 0.4s ease-in-out';
-    ov.style.opacity = '0';
-  }, 80);
+  fadeOutOverlay();
 });
 
 // iOS WKWebView: abilita :active su tutti i bottoni

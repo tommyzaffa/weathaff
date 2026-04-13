@@ -14,6 +14,18 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="WeathAff">
   <meta name="mobile-web-app-capable" content="yes">
+  <!-- iOS splash screens per device resolution -->
+  <link rel="apple-touch-startup-image" href="splash-640x1136.jpg"   media="(device-width:320px) and (device-height:568px) and (-webkit-device-pixel-ratio:2)">
+  <link rel="apple-touch-startup-image" href="splash-750x1334.jpg"   media="(device-width:375px) and (device-height:667px) and (-webkit-device-pixel-ratio:2)">
+  <link rel="apple-touch-startup-image" href="splash-828x1792.jpg"   media="(device-width:414px) and (device-height:896px) and (-webkit-device-pixel-ratio:2)">
+  <link rel="apple-touch-startup-image" href="splash-1125x2436.jpg"  media="(device-width:375px) and (device-height:812px) and (-webkit-device-pixel-ratio:3)">
+  <link rel="apple-touch-startup-image" href="splash-1242x2208.jpg"  media="(device-width:414px) and (device-height:736px) and (-webkit-device-pixel-ratio:3)">
+  <link rel="apple-touch-startup-image" href="splash-1242x2688.jpg"  media="(device-width:414px) and (device-height:896px) and (-webkit-device-pixel-ratio:3)">
+  <link rel="apple-touch-startup-image" href="splash-1080x2340.jpg"  media="(device-width:360px) and (device-height:780px) and (-webkit-device-pixel-ratio:3)">
+  <link rel="apple-touch-startup-image" href="splash-1170x2532.jpg"  media="(device-width:390px) and (device-height:844px) and (-webkit-device-pixel-ratio:3)">
+  <link rel="apple-touch-startup-image" href="splash-1284x2778.jpg"  media="(device-width:428px) and (device-height:926px) and (-webkit-device-pixel-ratio:3)">
+  <link rel="apple-touch-startup-image" href="splash-1179x2556.jpg"  media="(device-width:393px) and (device-height:852px) and (-webkit-device-pixel-ratio:3)">
+  <link rel="apple-touch-startup-image" href="splash-1290x2796.jpg"  media="(device-width:430px) and (device-height:932px) and (-webkit-device-pixel-ratio:3)">
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <link rel="preload" as="image" href="splash.png">
   <script>
@@ -585,7 +597,7 @@ body::before {
   </style>
 </head>
 <body>
-<div id="pageOverlay" style="position:fixed;inset:0;background:#0b1430;z-index:9999;pointer-events:none;"></div>
+<div id="pageOverlay" style="position:fixed;inset:-50px;background:#0b1430;z-index:99999;pointer-events:none;opacity:1;"></div>
 <div id="appSplash" class="app-splash" aria-label="WeathAff splash"></div>
 <div class="app">
 
@@ -1636,13 +1648,24 @@ function safeNavigate(url) {
   }, 420);
 }
 
-// reset se la pagina torna dal bfcache / back-forward cache
-window.addEventListener('pageshow', () => {
-  isNavigating = false;
+function fadeOutOverlay() {
   var ov = document.getElementById('pageOverlay');
+  if (!ov) return;
   ov.style.opacity = '1';
   ov.style.transition = 'none';
+  // Force reflow so opacity:1 is committed before we start the transition
+  void ov.offsetWidth;
+  setTimeout(() => {
+    ov.style.transition = 'opacity 0.4s ease-in-out';
+    ov.style.opacity = '0';
+  }, 60);
+}
+
+// reset se la pagina torna dal bfcache / back-forward cache
+window.addEventListener('pageshow', (e) => {
+  isNavigating = false;
   lockPortrait();
+  fadeOutOverlay();
 });
 
 function lockPortrait() {
@@ -1658,11 +1681,7 @@ window.addEventListener('orientationchange', () => {
 
 window.addEventListener('DOMContentLoaded', () => {
   lockPortrait();
-  var ov = document.getElementById('pageOverlay');
-  setTimeout(() => {
-    ov.style.transition = 'opacity 0.4s ease-in-out';
-    ov.style.opacity = '0';
-  }, 80);
+  fadeOutOverlay();
 });
 
 // iOS WKWebView: abilita :active su tutti i bottoni
