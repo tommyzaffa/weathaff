@@ -587,8 +587,8 @@ body::before {
   </style>
 </head>
 <body>
-<div id="pageOverlay" style="position:fixed;inset:-50px;background:#0b1430;z-index:99999;pointer-events:none;opacity:1;"></div>
 <div id="appSplash" class="app-splash" aria-label="WeathAff splash"></div>
+<div id="pageOverlay" style="position:fixed;inset:-50px;background:#0b1430;z-index:999999;pointer-events:none;opacity:1;"></div>
 <div class="app">
 
   <div class="header">
@@ -1648,13 +1648,18 @@ function fadeOutOverlay() {
   ov.style.opacity = '1';
   ov.style.transition = 'none';
   void ov.offsetWidth;
+  // If splash is present, wait longer for iOS viewport to settle
+  var splash = document.getElementById('appSplash');
+  var delay = splash ? 400 : 60;
   setTimeout(() => {
-    // Show content, then fade out overlay
-    var app = document.querySelector('.app');
-    if (app) app.classList.add('visible');
     ov.style.transition = 'opacity 0.4s ease-in-out';
     ov.style.opacity = '0';
-  }, 60);
+    // Only show content if no splash (splash handles it on fade-out)
+    if (!splash) {
+      var app = document.querySelector('.app');
+      if (app) app.classList.add('visible');
+    }
+  }, delay);
 }
 
 // reset se la pagina torna dal bfcache / back-forward cache
@@ -1696,6 +1701,9 @@ window.addEventListener('load', () => {
   const shouldShowSplash = !sessionStorage.getItem('wa_seen_splash');
   if (!shouldShowSplash) {
     splash.remove();
+    // Show content since there's no splash to handle it
+    var app = document.querySelector('.app');
+    if (app) app.classList.add('visible');
     return;
   }
 
@@ -1703,6 +1711,9 @@ window.addEventListener('load', () => {
 
   setTimeout(() => {
     splash.classList.add('hidden');
+    // Show content as splash fades out
+    var app = document.querySelector('.app');
+    if (app) app.classList.add('visible');
     setTimeout(() => splash.remove(), 450);
   }, 2200);
 });
