@@ -65,15 +65,13 @@ html::-webkit-scrollbar {
     .app-splash {
       display: flex;
       position: fixed;
-      inset: 0;
+      inset: -100px;
       background: #0b1430 url('splash.png') center 46% / cover no-repeat;
       align-items: center;
       justify-content: center;
       z-index: 99999;
       opacity: 1;
       transition: opacity 0.45s ease;
-      transform: scale(1.05);
-      transform-origin: center center;
     }
 
 .app-splash.hidden {
